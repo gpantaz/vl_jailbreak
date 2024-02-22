@@ -39,6 +39,7 @@ class DatasetItem:
     image: Image
     category: str
     index: int
+    jailbreak_id: Optional[int] = None
 
 
 def read_csv(path: str):
@@ -78,6 +79,7 @@ class DatasetIterator(torch.utils.data.Dataset):
             image=Image.open(instance.image_path),
             category=instance.question.category,
             index=instance.question.index,
+            jailbreak_id=instance.jailbreak.id if instance.jailbreak is not None else None
         )
 
     def _build_dataset(self,
