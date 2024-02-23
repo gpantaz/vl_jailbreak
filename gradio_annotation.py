@@ -94,7 +94,7 @@ def main(args: argparse.Namespace) -> None:
         output_dir=args.output_dir,
     )
 
-    with gr.Blocks(theme=gr.themes.Monochrome()) as block:
+    with gr.Blocks() as block:
         example_index = gr.State(gradio_demo.get_next_unlabeled_example_index(0))
 
         with gr.Row():
