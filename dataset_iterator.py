@@ -63,19 +63,23 @@ class DatasetIterator(torch.utils.data.Dataset):
         images_folder_path: str = "data/images",
         use_jailbreak_prompt: bool = False,
         use_blank_image: bool = False,
+        blank_image: str = "blank.jpg",
     ):
         self.use_jailbreak_prompt = use_jailbreak_prompt
         self.use_blank_image = use_blank_image
         self.images_folder_path = images_folder_path
 
         self.dataset = self._build_dataset(question_csv_path, jailbreak_csv)
+        self.blank_image = Path(images_folder_path, blank_image)
 
     def __len__(self):
         return len(self.dataset)
 
     def __getitem__(self, idx: int) -> DatasetItem:
         instance = self.dataset[idx]
-        image_path = Path(instance.image_path)
+        image_path = (
+            self.blank_image if self.use_blank_image else Path(instance.image_path)
+        )
         assert image_path.exists()
 
         if instance.jailbreak is not None:
