@@ -1,5 +1,6 @@
 import argparse
 import torch
+import os
 
 from llava.constants import (
     IMAGE_TOKEN_INDEX,
@@ -24,6 +25,7 @@ from PIL import Image
 from io import BytesIO
 from transformers import TextStreamer
 import sys
+from tqdm import tqdm
 
 sys.path.append("./")
 from dataset_iterator import DatasetIterator
@@ -95,12 +97,11 @@ def main(args):
     #     ]
     # else:
     #     image_tensor = image_tensor.to(model.device, dtype=torch.float16)
-
     for example in tqdm(dataset, total=len(dataset), desc="Running model"):
         conv = conv_templates[conv_mode].copy()
-        image = example.image
+        image = example.image.convert("RGB")
         image_size = image
-        image_tensor = process_images([image], image_processor, model.config)
+        image_tensor = process_images([image], image_processor, model.config).to(model.device, dtype=model.dtype)
 
         # try:
         #     inp = input(f"{roles[0]}: ")
@@ -146,7 +147,7 @@ def main(args):
 
         with torch.inference_mode():
             output_ids = model.generate(
-                input_ids,
+                input_ids.to(device=model.device),
                 images=image_tensor,
                 image_sizes=[image_size],
                 do_sample=False if args.temperature > 0 else False,
