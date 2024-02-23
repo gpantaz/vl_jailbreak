@@ -6,6 +6,7 @@ from PIL import Image
 import torch
 import pandas as pd
 from pydantic import BaseModel, model_validator
+from pathlib import Path
 
 
 class Question(BaseModel):
@@ -40,9 +41,13 @@ class Instance(BaseModel):
 class DatasetItem:
     prompt: str
     image: Image
+    image_path: Path
     category: str
     index: int
     jailbreak_id: Optional[int] = None
+
+    def to_key(self) -> str:
+        return f"{self.category}_question{self.index}_jailbreak{self.jailbreak_id}"
 
 
 def read_csv(path: str):
@@ -59,21 +64,20 @@ class DatasetIterator(torch.utils.data.Dataset):
         use_jailbreak_prompt: bool = False,
         use_blank_image: bool = False,
     ):
-
         self.use_jailbreak_prompt = use_jailbreak_prompt
         self.use_blank_image = use_blank_image
         self.images_folder_path = images_folder_path
 
-        self.dataset = self._build_dataset(
-            question_csv_path,
-            jailbreak_csv,
-        )
+        self.dataset = self._build_dataset(question_csv_path, jailbreak_csv)
 
     def __len__(self):
         return len(self.dataset)
 
-    def __getitem__(self, idx) -> Instance:
+    def __getitem__(self, idx: int) -> DatasetItem:
         instance = self.dataset[idx]
+        image_path = Path(instance.image_path)
+        assert image_path.exists()
+
         if instance.jailbreak is not None:
             prompt = instance.jailbreak.text.replace(
                 "[INSERT PROMPT HERE]", instance.question.prompt
@@ -84,6 +88,7 @@ class DatasetIterator(torch.utils.data.Dataset):
         return DatasetItem(
             prompt=prompt,
             image=Image.open(instance.image_path),
+            image_path=image_path,
             category=instance.question.category,
             index=instance.question.index,
             jailbreak_id=(

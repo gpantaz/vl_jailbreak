@@ -1,13 +1,15 @@
 from pathlib import Path
 from typing import Literal, TypedDict
-from omnilmm.chat import img2base64, OmniLMMChat
+from omnilmm.chat import OmniLMMChat, img2base64
 import json
 import logging
 from tqdm import tqdm
+from dataset_iterator import DatasetItem, DatasetIterator
 
 logger = logging.getLogger(__name__)
 
-OUTPUT_CSV_FILE = "omnilmm_output.csv"
+
+OUTPUT_JSON_PREFIX = "predictions/omni12b_jailbreak"
 
 
 class OmniLMMInput(TypedDict):
@@ -16,52 +18,50 @@ class OmniLMMInput(TypedDict):
     image: bytes
 
 
-class OutputRow(TypedDict):
-    question: str
-    iamge_path: str
-    answer: str
-
-
 def build_input_message(
-    content: str, image_path: Path, role: Literal["user", "assistant"] = "user"
+    dataset_item: DatasetItem,
+    role: Literal["user", "assistant"] = "user",
 ) -> OmniLMMInput:
     # Load the image as base64
-    base64_image = img2base64(image_path)
+    base64_image = img2base64(dataset_item.image_path.resolve())
     # Create the input message
     input_message = json.dumps(
-        [{"role": role, "content": content}],
+        [{"role": role, "content": dataset_item.prompt}],
         ensure_ascii=True,
     )
-    return {"role": role, "content": input_message, "image": base64_image}
+    return {"question": input_message, "image": base64_image}
 
 
 if __name__ == "__main__":
+    print("Loading dataset")
+    dataset_iterator = DatasetIterator(
+        question_csv_path=Path("data/prompt_selection.csv"),
+        jailbreak_csv=Path("data/jailbreak-prompts.csv"),
+        use_jailbreak_prompt=True,
+        use_blank_image=False,
+    )
+
     logger.warning(
         "Make sure the requirements for OmniLMM are installed before running this otherwise it will crash hard and fast."
     )
 
+    print("Loading model")
     model = OmniLMMChat("openbmb/OmniLMM-12B")
 
-    # TODO: Load the image-question pairs
-    image_text_pairs: list[tuple[str, Path]] = []
-
+    print("Running model")
     outputs = []
-    for question, image_path in tqdm(
-        image_text_pairs, desc="Running model", total=len(image_text_pairs)
+    for idx in tqdm(
+        range(len(dataset_iterator)), desc="Running model", total=len(dataset_iterator)
     ):
-        input_message = build_input_message(question, image_path)
+        dataset_item = dataset_iterator[idx]
+        input_message = build_input_message(dataset_item)
         answer = model.chat(input_message)
-        output_row = {
-            "question": question,
-            "image_path": str(image_path),
-            "answer": answer,
-        }
-        outputs.append(output_row)
+        assert isinstance(answer, str)
 
-    # Save the outputs to a CSV file
-    with open(OUTPUT_CSV_FILE, "w") as f:
-        f.write("question,image_path,answer\n")
-        for row in tqdm(outputs, desc="Saving outputs", total=len(outputs)):
-            f.write(f"{row['question']},{row['image_path']},{row['answer']}\n")
+        outputs.append((dataset_item.to_key(), answer))
 
-    logger.info(f"Outputs saved to {OUTPUT_CSV_FILE}")
+    print("Saving outputs")
+    output_file = Path(
+        f"predictions/omni12b_jailbreak{dataset_iterator.use_jailbreak_prompt}.json"
+    )
+    output_file.write_text(json.dumps(dict(outputs), indent=4))
