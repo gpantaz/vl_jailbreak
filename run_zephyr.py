@@ -41,14 +41,13 @@ if __name__ == "__main__":
         prompt = pipe.tokenizer.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True
         )
-        outputs = pipe(
+        answer = pipe(
             prompt,
             max_new_tokens=1024,
             do_sample=False,
             temperature=1,
             repetition_penalty=1,
-        )
-        answer = outputs[0]["generated_text"]
+        )[0]["generated_text"]
         assert isinstance(answer, str)
 
         outputs.append((dataset_item.to_key(), answer))
