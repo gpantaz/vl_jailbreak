@@ -6,9 +6,6 @@ from tqdm import tqdm
 from dataset_iterator import DatasetItem, DatasetIterator
 
 
-OUTPUT_JSON_PREFIX = "predictions/omni12b_jailbreak"
-
-
 def build_input_message(
     dataset_item: DatasetItem,
     role: Literal["user", "assistant"] = "user",
@@ -29,11 +26,7 @@ if __name__ == "__main__":
         question_csv_path=Path("data/prompt_selection.csv"),
         jailbreak_csv=Path("data/jailbreak-prompts.csv"),
         use_jailbreak_prompt=True,
-        use_blank_image=False,
-    )
-
-    logger.warning(
-        "Make sure the requirements for OmniLMM are installed before running this otherwise it will crash hard and fast."
+        use_blank_image=True,
     )
 
     print("Loading model")
@@ -52,7 +45,8 @@ if __name__ == "__main__":
         outputs.append((dataset_item.to_key(), answer))
 
     print("Saving outputs")
+    blank_prefix = "blank_" if dataset_iterator.use_blank_image else ""
     output_file = Path(
-        f"predictions/omni12b_jailbreak{dataset_iterator.use_jailbreak_prompt}.json"
+        f"predictions/{blank_prefix}omni12b_jailbreak{dataset_iterator.use_jailbreak_prompt}.json"
     )
     output_file.write_text(json.dumps(dict(outputs), indent=4))
