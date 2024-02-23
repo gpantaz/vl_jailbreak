@@ -1,27 +1,18 @@
 from pathlib import Path
-from typing import Literal, TypedDict
+from typing import Any, Literal
 from omnilmm.chat import OmniLMMChat, img2base64
 import json
-import logging
 from tqdm import tqdm
 from dataset_iterator import DatasetItem, DatasetIterator
-
-logger = logging.getLogger(__name__)
 
 
 OUTPUT_JSON_PREFIX = "predictions/omni12b_jailbreak"
 
 
-class OmniLMMInput(TypedDict):
-    role: Literal["user", "assistant"]
-    content: str
-    image: bytes
-
-
 def build_input_message(
     dataset_item: DatasetItem,
     role: Literal["user", "assistant"] = "user",
-) -> OmniLMMInput:
+) -> dict[str, Any]:
     # Load the image as base64
     base64_image = img2base64(dataset_item.image_path.resolve())
     # Create the input message
