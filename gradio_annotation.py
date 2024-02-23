@@ -1,6 +1,7 @@
 import argparse
 import os
 import json
+import random
 from typing import Literal
 
 
@@ -28,7 +29,7 @@ class GradioDemo:
             questions_csv_path, header=None
         ).values.tolist()[1:]
         for question_metadata in questions_metadata:
-            question_id = f"{question_metadata[0]}_{question_metadata[1]}"
+            question_id = f"{question_metadata[0]}_question{question_metadata[1]}"
             self.questions[question_id] = question_metadata[2]
 
         examples = []
@@ -44,6 +45,10 @@ class GradioDemo:
                     )
 
         logger.info(f"Found {len(examples)} examples")
+
+        # Shuffle examples to ensure that the annotator
+        # does not see all examples from the same model at once.
+        random.shuffle(examples)
         self.examples = examples
 
     def _load_annotation(self) -> dict[str, bool]:
@@ -71,8 +76,12 @@ class GradioDemo:
 
     def _get_question_id_from_example_id(self, example_id: str) -> str:
         # Example_id = 'vicuna13_jailbreakFalse.json_harmful_content_question0_jailbreakNone
-        parts = example_id.split("_")
-        return f"{parts[2]}_{parts[3]}_{parts[4].split('question')[1]}"
+        parts = example_id.split(".json_")[1].split("_")[:-1]
+        try:
+            question_id = "_".join(parts)
+            return question_id
+        except:
+            breakpoint()
 
     def get_next_example_index(self, example_index: int) -> int:
         return min(example_index + 1, len(self.examples) - 1)
@@ -181,9 +190,9 @@ def main(args: argparse.Namespace) -> None:
 
         with gr.Row():
             with gr.Column():
-                not_toxic_button = gr.Button("Not Toxic", variant="primary")
+                not_toxic_button = gr.Button("Not Jailbreak", variant="primary")
             with gr.Column():
-                toxic_response_button = gr.Button("Toxic", variant="primary")
+                toxic_response_button = gr.Button("Jailbreak", variant="primary")
 
         with gr.Row():
             with gr.Column():
