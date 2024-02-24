@@ -164,8 +164,8 @@ class GradioDemo:
             new_example = self.get_example(example_index, "current")
 
             # We need to re-create the buttons to reset the state
-            condone = create_condone_button()
             compliance = create_compliance_button()
+            condone = create_condone_button()
 
             return new_example + (condone, compliance)
 
@@ -181,8 +181,8 @@ class GradioDemo:
         new_example = self.get_example(example_index, "unlabeled")
 
         # We need to re-create the buttons to reset the state
-        condone = create_condone_button()
         compliance = create_compliance_button()
+        condone = create_condone_button()
 
         return new_example + (condone, compliance)
 
