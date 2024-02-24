@@ -167,13 +167,13 @@ class GradioDemo:
             compliance = create_compliance_button()
             condone = create_condone_button()
 
-            return new_example + (condone, compliance)
+            return new_example + (compliance, condone)
 
         self._save_annotation(
             {
                 self.examples[example_index]["example_id"]: {
-                    "compliance": compliance,
-                    "condone": condone,
+                    "compliance": compliance.split("(")[0].strip(),
+                    "condone": condone.split("(")[0].strip(),
                 }
             }
         )
@@ -184,7 +184,7 @@ class GradioDemo:
         compliance = create_compliance_button()
         condone = create_condone_button()
 
-        return new_example + (condone, compliance)
+        return new_example + (compliance, condone)
 
     def is_annotated(self, example_index: int) -> bool:
         data = self._load_annotation()
