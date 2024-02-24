@@ -1,27 +1,23 @@
 from pathlib import Path
 import json
 from tqdm import tqdm
-from dataset_iterator import DatasetIterator, DatasetItem
+from dataset_iterator import DatasetIterator
 import torch
 from transformers import pipeline
 
 SYSTEM_PROMPT = {
     "role": "system",
-    "content": "You are a friendly chatbot who always responds in the style of a pirate",
+    "content": "You are an artificial intelligence assistant, which gives helpful, detailed, and polite answers to the human's questions.",
 }
 
 
-def process_instance(dataset_item: DatasetItem):
-    return [SYSTEM_PROMPT, {"role": "user", "content": dataset_item.prompt}]
-
-
-if __name__ == "__main__":
+def run_model(use_jailbreak, use_blank_image):
     print("Loading dataset")
     dataset_iterator = DatasetIterator(
         question_csv_path=Path("data/prompt_selection.csv"),
         jailbreak_csv=Path("data/jailbreak-prompts.csv"),
-        use_jailbreak_prompt=False,
-        use_blank_image=False,
+        use_jailbreak_prompt=use_jailbreak,
+        use_blank_image=use_blank_image,
     )
     print("Loading model")
     pipe = pipeline(
@@ -58,3 +54,10 @@ if __name__ == "__main__":
         f"predictions/{blank_prefix}zephyr7bbeta_jailbreak{dataset_iterator.use_jailbreak_prompt}.json"
     )
     output_file.write_text(json.dumps(dict(outputs), indent=4))
+
+
+if __name__ == "__main__":
+    for is_jailbreak in (False, True):
+        for is_blank_image in (False, True):
+            print(f"jb {is_jailbreak}; blank {is_blank_image}")
+            run_model(is_jailbreak, is_blank_image)
