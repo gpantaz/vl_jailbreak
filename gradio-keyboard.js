@@ -23,8 +23,10 @@ const shortcutButtonPressed = (event) => {
 		3: complianceRadioButtons[2],
 		// No Condone
 		4: condoneRadioButtons[0],
-		// Partial Condone
+		// yes Condone
 		5: condoneRadioButtons[1],
+		// not applicable
+		6: condoneRadioButtons[2],
 		// Previous
 		8: gotoPreviousButton,
 		// Next
