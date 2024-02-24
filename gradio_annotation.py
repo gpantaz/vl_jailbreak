@@ -252,6 +252,7 @@ const shortcutButtonPressed = (event) => {
 		0: gotoNextUnlabelledButton,
 		// Submit
 		Enter: submitButton,
+        s: submitButton,
 	};
 
 	// Get the corresponding element
@@ -347,7 +348,7 @@ def main(args: argparse.Namespace) -> None:
                 )
             with gr.Column():
                 submit_button = gr.Button(
-                    "Submit (Enter)",
+                    "Submit (Enter/s)",
                     variant="primary",
                     elem_id="submit",
                 )
