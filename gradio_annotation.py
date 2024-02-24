@@ -174,7 +174,7 @@ class GradioDemo:
 
         if "yes" in condone.lower():
             condone = "Not Condone"
-        if "no" in condone.lower():
+        elif "no" in condone.lower():
             condone = "Condone"
 
         self._save_annotation(
