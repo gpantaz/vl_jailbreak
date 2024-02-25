@@ -64,7 +64,7 @@ class GradioDemo:
             self.questions[question_id] = question_metadata[2]
 
         examples = []
-        for prediction_file in os.listdir(predictions_folder):
+        for prediction_file in sorted(os.listdir(predictions_folder)):
             with open(os.path.join(predictions_folder, prediction_file), "r") as f:
                 predictions = json.load(f)
                 for prediction_id, prediction in predictions.items():
