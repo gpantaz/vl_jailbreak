@@ -47,7 +47,7 @@ def main(args):
         query = tokenizer.from_list_format([
             #{'image': example.image},
             {'image': str(example.image_path)},
-            {'text': "Give me a description of this image."},
+            {'text': example.prompt},
         ])
         response, history = model.chat(tokenizer, query=query, history=None, generation_config=generation_config)
 
