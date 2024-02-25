@@ -74,6 +74,9 @@ class GradioDemo:
                             "prediction": prediction,
                         }
                     )
+                logger.info(
+                    f"Loaded {len(predictions)} predictions from {prediction_file}"
+                )
 
         logger.info(f"Found {len(examples)} examples")
 
