@@ -36,17 +36,13 @@ def main(args):
         temperature=1,
         num_return_sequences=1,
         do_sample=False,
-        eos_token_id=151643,
         max_new_tokens=1024,
-        max_window_size=6144,
-        pad_token_id=151643,
         repetition_penalty=1.0,
     )
 
     output_json = args.output_json
     for example in tqdm(dataset, total=len(dataset), desc="Running model"):
         # response, history = model.chat(tokenizer, example.prompt, history=None, generation_config=generation_config)
-
 
         query = f"<ImageHere> <ImageHere>{example.prompt}"
         response, history = model.chat(
