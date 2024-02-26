@@ -3,6 +3,7 @@ import torch
 from transformers import IdeficsForVisionText2Text, AutoProcessor
 from transformers.generation import GenerationConfig
 
+sys.path.append("./")
 from dataset_iterator import DatasetIterator
 from tqdm import tqdm
 
