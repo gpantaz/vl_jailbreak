@@ -36,10 +36,7 @@ def main(args):
         temperature=1,
         num_return_sequences=1,
         do_sample=False,
-        eos_token_id=151643,
         max_new_tokens=1024,
-        max_window_size=6144,
-        pad_token_id=151643,
         repetition_penalty=1.0,
     )
 
@@ -53,7 +50,7 @@ def main(args):
         query = f"<ImageHere> <ImageHere>{example.prompt}"
         response, history = model.chat(
             tokenizer,
-            query=query,
+            example.prompt,
             history=[],
             # Justt to be 100% sure that we are using the correct params
             max_new_tokens=generation_config.max_new_tokens,
