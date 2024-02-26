@@ -47,13 +47,11 @@ def main(args):
     for example in tqdm(dataset, total=len(dataset), desc="Running model"):
         # response, history = model.chat(tokenizer, example.prompt, history=None, generation_config=generation_config)
 
-        images = [model.vis_processor(example.image)]
-        image = torch.stack(images).to(model.device)
 
         query = f"<ImageHere> <ImageHere>{example.prompt}"
         response, history = model.chat(
             tokenizer,
-            query=query,
+            example.prompt,
             history=[],
             # Justt to be 100% sure that we are using the correct params
             max_new_tokens=generation_config.max_new_tokens,
