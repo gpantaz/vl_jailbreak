@@ -23,11 +23,11 @@ def main(args):
 
     # Note: The default behavior now has injection attack prevention off.
     tokenizer = AutoTokenizer.from_pretrained(
-        "internlm/internlm-xcomposer2-7b", trust_remote_code=True
+        "internlm/internlm2-chat-7b-sft", trust_remote_code=True
     )
 
     model = AutoModelForCausalLM.from_pretrained(
-        "internlm/internlm-xcomposer2-7b", device_map="cuda", trust_remote_code=True
+        "internlm/internlm2-chat-7b-sft", device_map="cuda", trust_remote_code=True
     ).eval()
     generation_config = GenerationConfig(
         max_length=1024,
