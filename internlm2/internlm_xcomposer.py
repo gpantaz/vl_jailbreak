@@ -53,9 +53,8 @@ def main(args):
 
         query = f"<ImageHere> <ImageHere>{example.prompt}"
         response, history = model.chat(
-            tokenizer, query=query, history=None, generation_config=generation_config
+            tokenizer, query=query, history=[], generation_config=generation_config
         )
-        breakpoint()
 
         # query = tokenizer.from_list_format(
         #     [{'image': "/users/gmp2000/sharedscratch/vl_jailbreak/data/images/harmful_content_0.jpg"},{'text': "a photo of a"},
