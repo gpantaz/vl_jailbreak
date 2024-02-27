@@ -3,6 +3,7 @@ import torch
 from transformers import IdeficsForVisionText2Text, AutoProcessor
 from transformers.generation import GenerationConfig
 
+import sys
 sys.path.append("./")
 from dataset_iterator import DatasetIterator
 from tqdm import tqdm
@@ -23,6 +24,7 @@ def main(args):
     model = IdeficsForVisionText2Text.from_pretrained(
         checkpoint, torch_dtype=torch.bfloat16
     ).to(device)
+    model = model.eval()
     processor = AutoProcessor.from_pretrained(checkpoint)
 
     output_json = args.output_json
@@ -70,6 +72,7 @@ def main(args):
             generation_config=generation_config,
         )
         generated_text = processor.batch_decode(generated_ids, skip_special_tokens=True)
+        breakpoint()
         for i, t in enumerate(generated_text):
             print(f"{i}:\n{t}\n")
 
