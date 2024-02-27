@@ -51,6 +51,7 @@ def main(args):
         response, history = model.chat(
             tokenizer,
             example.prompt,
+            image=image,
             history=[],
             # Justt to be 100% sure that we are using the correct params
             max_new_tokens=generation_config.max_new_tokens,
