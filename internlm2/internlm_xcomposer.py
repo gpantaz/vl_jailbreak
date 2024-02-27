@@ -44,7 +44,7 @@ def main(args):
     for example in tqdm(dataset, total=len(dataset), desc="Running model"):
         # response, history = model.chat(tokenizer, example.prompt, history=None, generation_config=generation_config)
 
-        images = [model.vis_processor(example.image)]
+        images = [model.vis_processor(example.image.convert("RGB"))]
         image = torch.stack(images).to(model.device)
 
         query = f"<ImageHere> <ImageHere>{example.prompt}"
