@@ -13,6 +13,7 @@ Other commands:
 - Type "!!save <filename>" to save the conversation history to a json file.
 - Type "!!load <filename>" to load a conversation history from a json file.
 """
+
 import argparse
 import os
 import re
@@ -83,7 +84,8 @@ from fastchat.utils import is_partial_stop, is_sentence_complete, get_context_le
 
 
 import sys
-sys.path.append('./')
+
+sys.path.append("./")
 from dataset_iterator import DatasetIterator
 
 
@@ -94,7 +96,6 @@ from transformers.generation.logits_process import (
     TopKLogitsWarper,
     TopPLogitsWarper,
 )
-
 
 
 def prepare_logits_processor(
@@ -282,9 +283,9 @@ def generate_stream(
                             output_ids if echo else output_ids[input_echo_len:]
                         )
                     ],
-                    "token_logprobs": token_logprobs
-                    if echo
-                    else token_logprobs[input_echo_len:],
+                    "token_logprobs": (
+                        token_logprobs if echo else token_logprobs[input_echo_len:]
+                    ),
                     "top_logprobs": [{}]
                     * len(token_logprobs if echo else token_logprobs[input_echo_len:]),
                 }
@@ -371,7 +372,6 @@ def generate_stream(
         torch.npu.empty_cache()
 
 
-
 def stream_output(output_stream):
     pre = 0
     for outputs in output_stream:
@@ -398,6 +398,7 @@ def chat_loop(
     temperature: float,
     repetition_penalty: float,
     max_new_tokens: int,
+    top_p: float,
     chatio: ChatIO,
     gptq_config: Optional[GptqConfig] = None,
     awq_config: Optional[AWQConfig] = None,
@@ -412,7 +413,7 @@ def chat_loop(
     images_folder_path: str = "data/images",
     use_jailbreak_prompt: bool = False,
     use_blank_image: bool = False,
-    output_json = "vicuna_output.json"
+    output_json="vicuna_output.json",
 ):
     dataset = DatasetIterator(
         question_csv_path=question_csv_path,
@@ -577,7 +578,7 @@ def chat_loop(
             "stop": conv.stop_str,
             "stop_token_ids": conv.stop_token_ids,
             "echo": False,
-            "top_p": 0,
+            "top_p": top_p,
             "top_k": -1,
         }
 
@@ -600,7 +601,9 @@ def chat_loop(
             data = {}
 
         # breakpoint()
-        data[f"{example.category}_question{example.index}_jailbreak{example.jailbreak_id}"] = outputs
+        data[
+            f"{example.category}_question{example.index}_jailbreak{example.jailbreak_id}"
+        ] = outputs
         with open(output_json, "w") as f:
             json.dump(data, f, indent=4)
         #     duration = time.time() - t
@@ -828,6 +831,7 @@ def main(args):
             args.temperature,
             args.repetition_penalty,
             args.max_new_tokens,
+            args.top_p,
             chatio,
             gptq_config=GptqConfig(
                 ckpt=args.gptq_ckpt or args.model_path,
@@ -851,7 +855,7 @@ def main(args):
             images_folder_path=args.images_folder_path,
             use_jailbreak_prompt=args.use_jailbreak_prompt,
             use_blank_image=args.use_blank_image,
-            output_json=args.output_json
+            output_json=args.output_json,
         )
     except KeyboardInterrupt:
         print("exit...")
@@ -932,6 +936,11 @@ if __name__ == "__main__":
         type=str,
         default="vicuna_output.json",
         help="Path to the output json file.",
+    )
+    parser.add_argument(
+        "--top-p",
+        type=float,
+        default=0,
     )
     args = parser.parse_args()
     main(args)
