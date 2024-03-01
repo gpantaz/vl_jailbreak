@@ -17,6 +17,7 @@ from llava.mm_utils import (
     get_model_name_from_path,
 )
 import json
+from transformers.generation import GenerationConfig
 
 from PIL import Image
 
@@ -101,7 +102,9 @@ def main(args):
         conv = conv_templates[conv_mode].copy()
         image = example.image.convert("RGB")
         image_size = image
-        image_tensor = process_images([image], image_processor, model.config).to(model.device, dtype=model.dtype)
+        image_tensor = process_images([image], image_processor, model.config).to(
+            model.device, dtype=model.dtype
+        )
 
         # try:
         #     inp = input(f"{roles[0]}: ")
@@ -145,14 +148,28 @@ def main(args):
         keywords = [stop_str]
         # streamer = TextStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
 
+        generation_config = GenerationConfig(
+            max_length=1024,
+            top_k=1,
+            top_p=args.top_p,
+            temperature=args.temperature,
+            num_return_sequences=1,
+            do_sample=args.do_sample,
+            eos_token_id=tokenizer.eos_token_id,
+            max_new_tokens=1024,
+            pad_token_id=tokenizer.pad_token_id,
+            repetition_penalty=1.0,
+        )
+
         with torch.inference_mode():
             output_ids = model.generate(
                 input_ids.to(device=model.device),
                 images=image_tensor,
                 image_sizes=[image_size],
-                do_sample=False if args.temperature > 0 else False,
-                temperature=args.temperature,
-                max_new_tokens=args.max_new_tokens,
+                generation_config=generation_config,
+                # do_sample=False if args.temperature > 0 else False,
+                # temperature=args.temperature,
+                # max_new_tokens=args.max_new_tokens,
                 # streamer=streamer,
                 use_cache=True,
             )
@@ -223,6 +240,15 @@ if __name__ == "__main__":
         type=str,
         default="vicuna_output.json",
         help="Path to the output json file.",
+    )
+    parser.add_argument(
+        "--do-sample",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--top-p",
+        type=float,
+        default=1,
     )
     args = parser.parse_args()
     main(args)
