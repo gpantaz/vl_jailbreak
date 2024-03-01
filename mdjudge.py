@@ -1,6 +1,6 @@
 import json
 import os
-
+from tqdm import tqdm
 from pydantic import BaseModel
 # from saladbench.evaluator import MDJudgeEvaluator
 
@@ -62,7 +62,7 @@ def get_dataset_iterator(model_predictions_file: str) -> DatasetIterator:
     return dataset
 
 
-def prepare_data(model_predictions_file: str) -> list[Sample]:
+def prepare_data(model_predictions_file: str):
     dataset = get_dataset_iterator(model_predictions_file)
     model_predictions = json.load(
         open(os.path.join("predictions", model_predictions_file), "r")
@@ -72,38 +72,35 @@ def prepare_data(model_predictions_file: str) -> list[Sample]:
         item = dataset[idx]
         if item.jailbreak_id is not None and item.jailbreak_id == 75:
             continue
-        identifier = f"{model_predictions_file}_{item.category}_question{item.index}_jailbreak{item.jailbreak_id}"
+
         samples.append(
             Sample(
-                question=item.prompt,
-                answer=model_predictions[identifier],
-                sample_id=identifier,
+                question=item.question,
+                answer=model_predictions[item.to_key()],
+                sample_id=item.to_key(),
             )
         )
     return samples
 
 
-def evaluate_samples(data: list[Sample], model, tokenizer) -> None:
+def evaluate_samples(data, model, tokenizer) -> None:
     input_text = [evaluation_template.strip() % (d.question, d.answer) for d in data]
-    inputs = tokenizer(
-        input_text, return_tensors="pt", add_special_tokens=True
-    ).to("cuda")
-    breakpoint()
-
-    # eval_labels, eval_clses = md_judge.eval_unsafe_labels(questions, answers)
-    resp = tokenizer.batch_decode(
-        outputs, skip_special_tokens=True, clean_up_tokenization_spaces=False
-    )
-    resp = resp[0][len(prompt) - 3 :].strip()
-    print("=" * 20 + "Safety Judgement" + "=" * 20)
-    for i in range(len(questions)):
-        print("\n===Evaluation===")
-        print(["SAFE", "UNSAFE", "Exception"][eval_labels[i]])
-        print("===Harm category (maybe empty)===")
-        print(eval_clses[i])
+    results = {}
+    for sample in tqdm(data):
+        text = evaluation_template.strip() % (sample.question, sample.answer)
+        inputs = tokenizer(
+            text, return_tensors="pt", add_special_tokens=True
+        ).to("cuda")
+        outputs = model.generate(**inputs, max_new_tokens=40)
+        # eval_labels, eval_clses = md_judge.eval_unsafe_labels(questions, answers)
+        resp = tokenizer.batch_decode(
+            outputs, skip_special_tokens=True, clean_up_tokenization_spaces=False
+        )[0][len(text) - 5:]
+        results[sample.sample_id] = resp
+    return results
 
 
-def main() -> None:W
+def main() -> None:
     tokenizer = AutoTokenizer.from_pretrained("OpenSafetyLab/MD-Judge-v0.1")
     model = AutoModelForCausalLM.from_pretrained("OpenSafetyLab/MD-Judge-v0.1").to("cuda")
     # md_judge = MDJudgeEvaluator(
@@ -112,9 +109,11 @@ def main() -> None:W
     for model_predictions_file in os.listdir("predictions"):
         if "zephyr" in model_predictions_file or "omni" in model_predictions_file:
             continue
+        print(model_predictions_file)
         data = prepare_data(model_predictions_file)
-        evaluate_samples(data=data, model=model, tokenizer=tokenizer)
-
+        results = evaluate_samples(data=data, model=model, tokenizer=tokenizer) 
+        with open(f"annotations/{model_predictions_file}_mdjudge.json", "w") as fp:
+            json.dump(results, fp)
 
 if __name__ == "__main__":
     main()
