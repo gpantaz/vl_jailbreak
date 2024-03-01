@@ -39,7 +39,9 @@ class Instance(BaseModel):
 
 @dataclass
 class DatasetItem:
+
     prompt: str
+    question: str
     image: Image
     image_path: Path
     category: str
@@ -91,6 +93,7 @@ class DatasetIterator(torch.utils.data.Dataset):
 
         return DatasetItem(
             prompt=prompt,
+            question=instance.question.prompt,
             image=Image.open(instance.image_path),
             image_path=image_path,
             category=instance.question.category,
