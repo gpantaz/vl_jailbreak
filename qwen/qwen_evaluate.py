@@ -21,9 +21,13 @@ def main(args):
     )
 
     # Note: The default behavior now has injection attack prevention off.
-    tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen-7B-Chat", trust_remote_code=True)
+    tokenizer = AutoTokenizer.from_pretrained(
+        "Qwen/Qwen-7B-Chat", trust_remote_code=True
+    )
 
-    model = AutoModelForCausalLM.from_pretrained("Qwen/Qwen-7B-Chat", device_map="auto", trust_remote_code=True).eval()
+    model = AutoModelForCausalLM.from_pretrained(
+        "Qwen/Qwen-7B-Chat", device_map="auto", trust_remote_code=True
+    ).eval()
     generation_config = GenerationConfig(
         max_length=1024,
         top_k=1,
@@ -36,13 +40,14 @@ def main(args):
         max_window_size=24000,
         pad_token_id=151643,
         repetition_penalty=1.0,
-        chat_format='chatml'
+        chat_format="chatml",
     )
-
 
     idx = 0
     for example in tqdm(dataset, total=len(dataset), desc="Running model"):
-        response, history = model.chat(tokenizer, example.prompt, history=None, generation_config=generation_config)
+        response, history = model.chat(
+            tokenizer, example.prompt, history=None, generation_config=generation_config
+        )
 
         output_json = args.output_json
         if os.path.exists(output_json):
@@ -94,6 +99,14 @@ if __name__ == "__main__":
         default="vicuna_output.json",
         help="Path to the output json file.",
     )
+    parser.add_argument(
+        "--do-sample",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--top-p",
+        type=int,
+        default=1,
+    )
     args = parser.parse_args()
     main(args)
-
