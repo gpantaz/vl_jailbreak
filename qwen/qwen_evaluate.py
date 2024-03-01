@@ -31,10 +31,10 @@ def main(args):
     generation_config = GenerationConfig(
         max_length=1024,
         top_k=1,
-        top_p=1,
+        top_p=args.top_p,
         temperature=1,
         num_return_sequences=1,
-        do_sample=False,
+        do_sample=args.do_sample,
         eos_token_id=151643,
         max_new_tokens=1024,
         max_window_size=24000,
