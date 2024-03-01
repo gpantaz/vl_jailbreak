@@ -21,40 +21,46 @@ def main(args):
     )
 
     # Note: The default behavior now has injection attack prevention off.
-    tokenizer = AutoTokenizer.from_pretrained("Qwen/Qwen-VL-Chat", trust_remote_code=True)
+    tokenizer = AutoTokenizer.from_pretrained(
+        "Qwen/Qwen-VL-Chat", trust_remote_code=True
+    )
 
-    model = AutoModelForCausalLM.from_pretrained("Qwen/Qwen-VL-Chat", device_map="cuda", trust_remote_code=True).eval()
+    model = AutoModelForCausalLM.from_pretrained(
+        "Qwen/Qwen-VL-Chat", device_map="cuda", trust_remote_code=True
+    ).eval()
     generation_config = GenerationConfig(
         max_length=1024,
         top_k=1,
-        top_p=1,
+        top_p=args.top_p,
         temperature=1,
         num_return_sequences=1,
-        do_sample=False,
+        do_sample=args.do_sample,
         eos_token_id=151643,
         max_new_tokens=1024,
         max_window_size=6144,
         pad_token_id=151643,
         repetition_penalty=1.0,
-        chat_format='chatml'
+        chat_format="chatml",
     )
-
 
     output_json = args.output_json
     for example in tqdm(dataset, total=len(dataset), desc="Running model"):
         # response, history = model.chat(tokenizer, example.prompt, history=None, generation_config=generation_config)
 
-        query = tokenizer.from_list_format([
-            #{'image': example.image},
-            {'image': str(example.image_path)},
-            {'text': example.prompt},
-        ])
-        response, history = model.chat(tokenizer, query=query, history=None, generation_config=generation_config)
+        query = tokenizer.from_list_format(
+            [
+                # {'image': example.image},
+                {"image": str(example.image_path)},
+                {"text": example.prompt},
+            ]
+        )
+        response, history = model.chat(
+            tokenizer, query=query, history=None, generation_config=generation_config
+        )
 
         # query = tokenizer.from_list_format(
         #     [{'image': "/users/gmp2000/sharedscratch/vl_jailbreak/data/images/harmful_content_0.jpg"},{'text': "a photo of a"},
         #     ])
-
 
         if os.path.exists(output_json):
             data = json.load(open(output_json))
@@ -64,7 +70,6 @@ def main(args):
         data[example.to_key()] = response
         with open(output_json, "w") as f:
             json.dump(data, f, indent=4)
-
 
 
 if __name__ == "__main__":
@@ -104,8 +109,15 @@ if __name__ == "__main__":
         default="vicuna_output.json",
         help="Path to the output json file.",
     )
+    parser.add_argument(
+        "--do-sample",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--top-p",
+        type=int,
+        default=1,
+    )
     args = parser.parse_args()
 
-
     main(args)
-
