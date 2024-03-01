@@ -32,10 +32,10 @@ def main(args):
     generation_config = GenerationConfig(
         max_length=1024,
         top_k=1,
-        top_p=1,
+        top_p=args.top_p,
         temperature=1,
         num_return_sequences=1,
-        do_sample=False,
+        do_sample=args.do_sample,
         max_new_tokens=1024,
         repetition_penalty=1.0,
     )
@@ -107,6 +107,15 @@ if __name__ == "__main__":
         type=str,
         default="predictions/interlm_xcomposer.json",
         help="Path to the output json file.",
+    )
+    parser.add_argument(
+        "--do-sample",
+        action="store_true",
+    )
+    parser.add_argument(
+        "--top-p",
+        type=float,
+        default=1,
     )
     args = parser.parse_args()
 
