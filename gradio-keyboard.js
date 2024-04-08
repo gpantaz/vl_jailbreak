@@ -5,9 +5,6 @@ const shortcutButtonPressed = (event) => {
 	const complianceRadioButtons = document
 		.getElementById("compliance-radio")
 		.querySelectorAll("input[type='radio']");
-	const condoneRadioButtons = document
-		.getElementById("condone-radio")
-		.querySelectorAll("input[type='radio']");
 
 	const gotoPreviousButton = document.getElementById("goto-previous");
 	const gotoNextButton = document.getElementById("goto-next");
@@ -21,12 +18,8 @@ const shortcutButtonPressed = (event) => {
 		2: complianceRadioButtons[1],
 		// Full Compliance
 		3: complianceRadioButtons[2],
-		// No Condone
-		4: condoneRadioButtons[0],
-		// yes Condone
-		5: condoneRadioButtons[1],
-		// not applicable
-		6: condoneRadioButtons[2],
+		// Not Applicable
+		4: complianceRadioButtons[3],
 		// Previous
 		8: gotoPreviousButton,
 		// Next
